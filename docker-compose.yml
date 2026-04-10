@@ -1,0 +1,22 @@
+services:
+
+  db:
+      image: postgres:15
+      environment:
+        - POSTGRES_DB=estoque_db
+        - POSTGRES_USER=admin
+        - POSTGRES_PASSWORD=tr4ptr1x
+      ports:
+        - "5432:5432"
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/estoque_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=tr4ptr1x
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    volumes:
+      - .:/app
