@@ -15,3 +15,5 @@ COPY src ./src
 
 # 6. Comando para rodar o projeto
 CMD ["./mvnw", "spring-boot:run"]
+
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-XX:+UseG1GC", "-jar", "app.jar"]
