@@ -41,12 +41,18 @@ public class SecurityFilter extends OncePerRequestFilter {
         // 4. Manda a requisição seguir o caminho dela (ir pro Controller)
         filterChain.doFilter(request, response);
     }
-
     private String recuperarToken(HttpServletRequest request) {
         var authorizationHeader = request.getHeader("Authorization");
-        if (authorizationHeader != null) {
-            return authorizationHeader.replace("Bearer ", "");
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            return authorizationHeader.substring(7); // Pula os 7 caracteres de "Bearer "
         }
         return null;
     }
+    /*private String recuperarToken(HttpServletRequest request) {
+        var authorizationHeader = request.getHeader("Authorization");
+        if (authorizationHeader != null) {
+            return authorizationHeader.replace("Bearer", "");
+        }
+        return null;
+    }*/
 }

@@ -25,8 +25,8 @@ public class TokenService {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret); // Use a chave secreta para assinar o token
             return JWT.create()
-                    .withIssuer("auth-api") // Define o emissor do token
-                    .withSubject(username.getId().toString()) // Define o assunto do token como o ID do usuário
+                    .withIssuer("API estoque.com") // Define o emissor do token
+                    .withSubject(username.getEmail()) // Define o assunto do token como o ID do usuário
                     .withExpiresAt(dataExpiracao()) // Define a expiração para 1 hora
                     .sign(algorithm); // Assina o token com o algoritmo e a chave secreta
         }  catch (Exception e) {
