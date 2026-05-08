@@ -16,20 +16,26 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity // <--- ADICIONE ESTA LINHA (Obrigatória para o @PreAuthorize)
 public class SecurityConfig {
+    
     @Autowired
     private SecurityFilter securityFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-            .csrf(csrf -> csrf.disable()) // DESABILITA o CSRF (Obrigatório para testar POST)
+            .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/login").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/usuarios/registrar").permitAll() // Libera o registro
-                .requestMatchers(HttpMethod.GET, "/api/usuarios/confirmar").permitAll()  // Libera a confirmação
-                .anyRequest().authenticated() // Todo o resto precisa de login
+                .requestMatchers(HttpMethod.POST, "/api/usuarios/registrar").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/usuarios/confirmar").permitAll()
+                
+                // OPCIONAL: Você pode travar a rota de admin aqui também para garantir
+                .requestMatchers("/api/admin/**").hasRole("ROLE_ADMIN") 
+                
+                .anyRequest().authenticated()
             )
             .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
             .build();

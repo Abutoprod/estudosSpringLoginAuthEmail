@@ -28,14 +28,21 @@ public class usuario implements UserDetails{
 
     @Column(nullable = false)
     private String senha; // Em um projeto real, a senha deve ser armazenada de forma segura (hash)
+    
+    @Column(name = "role", nullable = false)
+    private String role = "ROLE_USER";
 
+    @Column(name = "creditos", precision = 19, scale = 2)
+    private java.math.BigDecimal creditos = java.math.BigDecimal.ZERO;
+    
     private boolean ativo = false; // Comeca como inativo, só ativa depois de confirmar o email
 
     private String tokenConfirmacao; // codigo que vai no email para confirmar a conta do usuario
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_USER")); // Todos os usuários têm a role "USER"
+        //return List.of(new SimpleGrantedAuthority("ROLE_USER")); // Todos os usuários têm a role "USER"
+        return List.of(new SimpleGrantedAuthority(this.role));
         }
     @Override
     public String getPassword() {

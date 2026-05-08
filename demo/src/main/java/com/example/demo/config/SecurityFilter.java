@@ -32,7 +32,9 @@ public class SecurityFilter extends OncePerRequestFilter {
             // 2. Valida o token e descobre quem é o dono (o email)
             var subject = tokenService.getSubject(tokenJWT);
             var usuario = repository.findByEmail(subject);
-
+            System.out.println("DEBUG - Email: " + usuario.getEmail());
+            System.out.println("DEBUG - Role no Banco: " + usuario.getRole());
+            System.out.println("DEBUG - Authorities enviadas ao Spring: " + usuario.getAuthorities());
             // 3. Força a autenticação para o Spring entender que o cara está logado
             var authentication = new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);

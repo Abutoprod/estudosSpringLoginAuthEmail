@@ -21,6 +21,14 @@ public class UsuarioService {
     private JavaMailSender mailSender;
 
     public usuario registrar(usuario usuario) {
+
+            if (usuario.getRole() == null || usuario.getRole().isEmpty()) {
+                usuario.setRole("ROLE_USER");
+            }
+            // Garante que o saldo de créditos comece em 0.00 (evita NullPointerException)
+            if (usuario.getCreditos() == null) {
+                usuario.setCreditos(java.math.BigDecimal.ZERO);
+            }
             usuario.setSenha(encoder.encode(usuario.getSenha()));
             usuario.setAtivo(false); 
             usuario.setTokenConfirmacao(UUID.randomUUID().toString()); 
