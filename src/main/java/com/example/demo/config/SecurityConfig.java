@@ -29,7 +29,19 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/usuarios/registrar").permitAll() // Libera o registro
                 .requestMatchers(HttpMethod.GET, "/api/usuarios/confirmar").permitAll()  // Libera a confirmação
-                .anyRequest().authenticated() // Todo o resto precisa de login
+                .requestMatchers(HttpMethod.GET, "/api/participantes").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/jogos").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/participantes").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/participantes/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/participantes/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/pontos").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/creditos/ajustar").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/usuarios/*/vincular-participante/*").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/eventos/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/conteudo/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/eventos/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/arquivos/upload").hasRole("ADMIN")
+                                .anyRequest().authenticated() // Todo o resto precisa de login
             )
             .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
             .build();

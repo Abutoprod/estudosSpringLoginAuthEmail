@@ -20,3 +20,4 @@ services:
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     volumes:
       - .:/app
+      - ./fotos-eventos:/app/fotos-eventos
