@@ -24,7 +24,23 @@ public class SecurityFilter extends OncePerRequestFilter {
     private usuarioRepository repository;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    var tokenJWT = recuperarToken(request);
+
+    if (tokenJWT != null) {
+        var subject = tokenService.getSubject(tokenJWT);
+        var usuario = repository.findByEmail(subject);
+
+        // ADICIONE ESTA VERIFICAÇÃO:
+        if (usuario != null) {
+            var authentication = new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
+    }
+
+    filterChain.doFilter(request, response);
+}
+   /* protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         // 1. Tenta recuperar o token que vem no cabeçalho "Authorization"
         var tokenJWT = recuperarToken(request);
 
@@ -40,7 +56,7 @@ public class SecurityFilter extends OncePerRequestFilter {
 
         // 4. Manda a requisição seguir o caminho dela (ir pro Controller)
         filterChain.doFilter(request, response);
-    }
+    }*/
 
     private String recuperarToken(HttpServletRequest request) {
     var authorizationHeader = request.getHeader("Authorization");

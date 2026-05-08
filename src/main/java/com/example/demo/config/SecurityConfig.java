@@ -37,11 +37,13 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/pontos").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/creditos/ajustar").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/usuarios/*/vincular-participante/*").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/eventos/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/eventos", "/api/eventos/**").permitAll()     
                 .requestMatchers(HttpMethod.GET, "/api/conteudo/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll() // LIBERE AS FOTOS
                 .requestMatchers(HttpMethod.POST, "/api/eventos/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/arquivos/upload").hasRole("ADMIN")
-                                .anyRequest().authenticated() // Todo o resto precisa de login
+                .requestMatchers(HttpMethod.DELETE, "/api/eventos/**").hasRole("ADMIN")
+                                .anyRequest().permitAll() // Todo o resto precisa de login
             )
             .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
             .build();
