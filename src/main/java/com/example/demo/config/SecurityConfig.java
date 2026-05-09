@@ -57,6 +57,14 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.PUT, "/api/comandas/**").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.GET, "/api/comandas/minha").authenticated() // Cliente vê a dele
                     .requestMatchers(HttpMethod.GET, "/api/comandas/**").hasRole("ADMIN") // Admin vê todas
+
+                    /// filial
+                    .requestMatchers(HttpMethod.DELETE, "/api/filiais/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/api/filiais").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.PUT, "/api/filiais").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.GET, "/api/filiais/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/filiais").permitAll()
+
                 .anyRequest().authenticated()
             )
             .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)

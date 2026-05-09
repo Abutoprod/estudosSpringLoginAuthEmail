@@ -8,5 +8,6 @@ public record ProdutoDTO(
         BigDecimal precoCompra,
         BigDecimal precoVenda,
         Integer quantidade,
-        String categoria
+        String categoria,
+        Long filialId
 ) {}

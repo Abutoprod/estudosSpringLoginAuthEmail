@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.domain.Produto;
 import com.example.demo.dto.ProdutoDTO;
+import com.example.demo.repository.FilialRepository;
 import com.example.demo.repository.ProdutoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,28 +17,33 @@ public class ProdutoController {
 
     @Autowired
     private ProdutoRepository repository;
+    @Autowired
+    private FilialRepository filialRepository;
 
     // LISTAR: Qualquer um logado pode ver o estoque (opcional)
     @GetMapping
-    public List<Produto> listar() {
-        return repository.findAll();
+    public ResponseEntity<List<Produto>> listar(@RequestParam Long filialId) {
+        var produtos = repository.findByFilialId(filialId);
+        return ResponseEntity.ok(produtos);
     }
 
     // INSERIR: Somente ADMIN
     // INSERIR: Somente ADMIN
     @PostMapping
     public ResponseEntity criar(@RequestBody ProdutoDTO dados) {
+        var filial = filialRepository.findById(dados.filialId())
+                .orElseThrow(() -> new RuntimeException("Filial não encontrada"));
+
         var produto = new Produto();
         produto.setCodigo(dados.codigo());
-        produto.setDescricao(dados.descricao()); // Se enviar "nome" no JSON, aqui fica null
+        produto.setDescricao(dados.descricao());
         produto.setPrecoCompra(dados.precoCompra());
         produto.setPrecoVenda(dados.precoVenda());
         produto.setQuantidade(dados.quantidade());
         produto.setCategoria(dados.categoria());
+        produto.setFilial(filial); // Define a filial do produto
 
         repository.save(produto);
-
-        // MUDANÇA AQUI: Retorne o objeto 'produto' para conferir os dados no Postman
         return ResponseEntity.ok(produto);
     }
 
@@ -66,12 +72,8 @@ public class ProdutoController {
     // BUSCAR ESPECÍFICO: Detalhes de um produto
     @GetMapping("/{id}")
     public ResponseEntity buscarPorId(@PathVariable Long id) {
-        var produto = repository.findById(id);
-
-        if (produto.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(produto.get());
+        return repository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }

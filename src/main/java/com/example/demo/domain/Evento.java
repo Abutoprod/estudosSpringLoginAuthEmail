@@ -25,7 +25,8 @@ public class Evento {
     private String urlImagem; 
     private String linkInscricao;
 
-    @Enumerated(EnumType.STRING) // Salva "BAURU" ou "BOTUCATU" no banco
+    @ManyToOne
+    @JoinColumn(name = "filial_id")
     private Filial filial;
 
     @ManyToOne

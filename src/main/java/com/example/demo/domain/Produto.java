@@ -24,4 +24,7 @@ public class Produto {
     private BigDecimal precoVenda;
     private Integer quantidade;
     private String categoria;
+    @ManyToOne
+    @JoinColumn(name = "filial_id")
+    private Filial filial;
 }

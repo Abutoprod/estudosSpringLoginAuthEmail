@@ -3,13 +3,10 @@ package com.example.demo.controller;
 import com.example.demo.domain.Comanda;
 import com.example.demo.dto.ComandaResponseDTO;
 import com.example.demo.dto.ItemComandaDTO;
+import com.example.demo.repository.*;
 import org.springframework.security.core.Authentication;
 import com.example.demo.domain.ItemComanda;
 import com.example.demo.domain.usuario;
-import com.example.demo.repository.ComandaRepository;
-import com.example.demo.repository.ItemComandaRepository;
-import com.example.demo.repository.ProdutoRepository;
-import com.example.demo.repository.usuarioRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -26,23 +23,25 @@ public class ComandaController {
 
     @Autowired
     private ComandaRepository comandaRepository;
-
     @Autowired
     private ProdutoRepository produtoRepository;
-
     @Autowired
     private usuarioRepository usuarioRepository;
     @Autowired
-    private ItemComandaRepository itemComandaRepository;
+    private FilialRepository filialRepository; // Injeção necessária
 
-    // 1. ABRIR COMANDA (Somente ADMIN via SecurityConfig)
+    // 1. ABRIR COMANDA: Agora exige o filialId para vincular a unidade
     @PostMapping("/abrir/{usuarioId}")
-    public ResponseEntity abrirComanda(@PathVariable Long usuarioId) {
+    public ResponseEntity abrirComanda(@PathVariable Long usuarioId, @RequestParam Long filialId) {
         var cliente = usuarioRepository.findById(usuarioId);
+        var filial = filialRepository.findById(filialId);
+
         if (cliente.isEmpty()) return ResponseEntity.badRequest().body("Cliente não encontrado.");
+        if (filial.isEmpty()) return ResponseEntity.badRequest().body("Filial não encontrada.");
 
         Comanda comanda = new Comanda();
         comanda.setCliente(cliente.get());
+        comanda.setFilial(filial.get()); // Vínculo com a Entidade Filial
         comanda.setDataAbertura(LocalDateTime.now());
         comanda.setAberta(true);
         comanda.setValorTotal(BigDecimal.ZERO);
@@ -90,43 +89,46 @@ public class ComandaController {
         return ResponseEntity.ok(response);
     }
     // 2. ADICIONAR ITEM E BAIXAR ESTOQUE (Somente ADMIN via SecurityConfig)
-    @PostMapping("/{comandaId}/adicionar-item")
     @Transactional
-    public ResponseEntity adicionarItem(@PathVariable Long comandaId, @RequestParam Long produtoId, @RequestParam Integer quantidade) {
+    @PostMapping("/{comandaId}/item")
+    public ResponseEntity adicionarItem(@PathVariable Long comandaId, @RequestParam String codigoProduto, @RequestParam Integer quantidade) {
+        // 1. Busca a comanda
         var comandaOptional = comandaRepository.findById(comandaId);
-        var produtoOptional = produtoRepository.findById(produtoId);
-
         if (comandaOptional.isEmpty()) return ResponseEntity.notFound().build();
-        if (produtoOptional.isEmpty()) return ResponseEntity.badRequest().body("Produto inexistente.");
-
         var comanda = comandaOptional.get();
+
+        // 2. Busca o produto pelo código
+        var produtoOptional = produtoRepository.findByCodigo(codigoProduto);
+        if (produtoOptional.isEmpty()) return ResponseEntity.badRequest().body("Produto não encontrado.");
         var produto = produtoOptional.get();
 
-        if (!comanda.isAberta()) return ResponseEntity.badRequest().body("Esta comanda já está fechada.");
+        // --- REGRA DE OURO: VALIDAÇÃO DE FILIAL ---
+        // Verificamos se a filial do produto é a mesma da comanda
+        if (!produto.getFilial().getId().equals(comanda.getFilial().getId())) {
+            return ResponseEntity.status(403).body("Erro: Este produto pertence a outra filial ("
+                    + produto.getFilial().getNome() + ") e não pode ser adicionado nesta comanda.");
+        }
 
-        // VALIDAÇÃO DE ESTOQUE
+        // 3. Valida estoque
         if (produto.getQuantidade() < quantidade) {
             return ResponseEntity.badRequest().body("Estoque insuficiente. Disponível: " + produto.getQuantidade());
         }
 
-        // BAIXA NO ESTOQUE
-        produto.setQuantidade(produto.getQuantidade() - quantidade);
-        produtoRepository.save(produto);
-
-        // CRIAÇÃO DO ITEM DA COMANDA
+        // 4. Cria o item da comanda
         ItemComanda item = new ItemComanda();
         item.setComanda(comanda);
         item.setProduto(produto);
         item.setQuantidade(quantidade);
         item.setPrecoUnitario(produto.getPrecoVenda());
 
-        // ATUALIZA TOTAL DA COMANDA
-        BigDecimal valorItem = produto.getPrecoVenda().multiply(new BigDecimal(quantidade));
-        comanda.setValorTotal(comanda.getValorTotal().add(valorItem));
-        comanda.getItens().add(item);
+        // 5. Atualiza estoque e total da comanda
+        produto.setQuantidade(produto.getQuantidade() - quantidade);
+        comanda.setValorTotal(comanda.getValorTotal().add(produto.getPrecoVenda().multiply(new BigDecimal(quantidade))));
 
+        comanda.getItens().add(item);
         comandaRepository.save(comanda);
-        return ResponseEntity.ok("Item adicionado e estoque atualizado!");
+
+        return ResponseEntity.ok("Item adicionado com sucesso!");
     }
 
     // 3. FECHAR COMANDA (Pagamento)
@@ -144,34 +146,33 @@ public class ComandaController {
     }
 
     // ADMIN: Listar comandas com filtro opcional (?status=abertas ou ?status=fechadas)
+    // ADMIN: Listar filtrando obrigatoriamente por Filial
     @GetMapping
     public ResponseEntity listarTodas(
+            @RequestParam Long filialId, // Filtro obrigatório
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long clienteId) {
 
-        // 1. Pega todas as comandas do banco
-        var stream = comandaRepository.findAll().stream();
+        // Busca as comandas da filial e transforma em Stream para aplicar filtros extras
+        var stream = comandaRepository.findByFilialId(filialId).stream();
 
-        // 2. Filtra por Cliente (se o ID for informado)
         if (clienteId != null) {
             stream = stream.filter(c -> c.getCliente().getId().equals(clienteId));
         }
 
-        // 3. Filtra por Status (se informado)
         if ("abertas".equalsIgnoreCase(status)) {
             stream = stream.filter(Comanda::isAberta);
         } else if ("fechadas".equalsIgnoreCase(status)) {
             stream = stream.filter(c -> !c.isAberta());
         }
 
-        List<Comanda> comandas = stream.toList();
+        List<Comanda> listaFinal = stream.toList();
 
-        if (comandas.isEmpty()) {
-            return ResponseEntity.ok("Nenhuma comanda encontrada para os filtros aplicados.");
+        if (listaFinal.isEmpty()) {
+            return ResponseEntity.ok("Nenhuma comanda encontrada.");
         }
 
-        // 4. Converte para DTO
-        var response = comandas.stream().map(c -> new ComandaResponseDTO(
+        var response = listaFinal.stream().map(c -> new ComandaResponseDTO(
                 c.getId(),
                 c.getCliente().getNome(),
                 c.getValorTotal(),

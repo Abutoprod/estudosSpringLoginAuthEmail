@@ -30,4 +30,8 @@ public class Comanda {
 
     @OneToMany(mappedBy = "comanda", cascade = CascadeType.ALL)
     private List<ItemComanda> itens;
+
+    @ManyToOne
+    @JoinColumn(name = "filial_id")
+    private Filial filial;
 }
