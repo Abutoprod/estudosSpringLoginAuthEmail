@@ -2,8 +2,13 @@ package com.example.demo.domain;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 @Entity
 @Data
 public class Evento {
@@ -24,5 +29,5 @@ public class Evento {
     private Filial filial;
 
     @ManyToOne
-    private Jogo jogo; 
+    private Jogo jogo;
 }

@@ -6,6 +6,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -16,6 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
     @Autowired
     private SecurityFilter securityFilter;
@@ -43,7 +45,19 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/eventos/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/arquivos/upload").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/eventos/**").hasRole("ADMIN")
-                                .anyRequest().permitAll() // Todo o resto precisa de login
+
+                    .requestMatchers(HttpMethod.POST, "/api/estoque").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.PUT, "/api/estoque/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.DELETE, "/api/estoque/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.GET, "/api/estoque").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/estoque/**").permitAll()
+
+                    // comandas
+                    .requestMatchers(HttpMethod.POST, "/api/comandas/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.PUT, "/api/comandas/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.GET, "/api/comandas/minha").authenticated() // Cliente vê a dele
+                    .requestMatchers(HttpMethod.GET, "/api/comandas/**").hasRole("ADMIN") // Admin vê todas
+                .anyRequest().authenticated()
             )
             .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
             .build();
