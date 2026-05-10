@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.domain.Comanda;
 import com.example.demo.dto.ComandaResponseDTO;
 import com.example.demo.dto.ItemComandaDTO;
+import com.example.demo.dto.VendaRapidaDTO;
 import com.example.demo.repository.*;
 import org.springframework.security.core.Authentication;
 import com.example.demo.domain.ItemComanda;
@@ -10,6 +11,7 @@ import com.example.demo.domain.usuario;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import jakarta.transaction.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -29,6 +31,9 @@ public class ComandaController {
     private usuarioRepository usuarioRepository;
     @Autowired
     private FilialRepository filialRepository; // Injeção necessária
+
+    @Autowired
+    private ItemComandaRepository itemComandaRepository;
 
     // 1. ABRIR COMANDA: Agora exige o filialId para vincular a unidade
     @PostMapping("/abrir/{usuarioId}")
@@ -88,6 +93,37 @@ public class ComandaController {
 
         return ResponseEntity.ok(response);
     }
+
+
+    // Adicione este método dentro do seu ComandaController.java
+
+    @GetMapping("/{id}")
+    public ResponseEntity buscarPorId(@PathVariable Long id) {
+        var comandaOptional = comandaRepository.findById(id);
+
+        if (comandaOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Comanda c = comandaOptional.get();
+
+        // Transforma a entidade Comanda no DTO que o Android espera receber
+        ComandaResponseDTO response = new ComandaResponseDTO(
+                c.getId(),
+                c.getCliente().getNome(),
+                c.getValorTotal(),
+                c.isAberta(),
+                c.getDataAbertura(),
+                c.getItens().stream().map(item -> new com.example.demo.dto.ItemComandaDTO(
+                        item.getProduto().getDescricao(),
+                        item.getQuantidade(),
+                        item.getPrecoUnitario()
+                )).toList()
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
     // 2. ADICIONAR ITEM E BAIXAR ESTOQUE (Somente ADMIN via SecurityConfig)
     @Transactional
     @PostMapping("/{comandaId}/item")
@@ -186,5 +222,58 @@ public class ComandaController {
         )).toList();
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/venda-rapida")
+    @Transactional
+    public ResponseEntity realizarVendaRapida(@RequestBody VendaRapidaDTO dto) {
+        var filial = filialRepository.findById(dto.filialId())
+                .orElseThrow(() -> new RuntimeException("Filial não encontrada"));
+        var cliente = usuarioRepository.findById(dto.clienteId())
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+
+        Comanda venda = new Comanda();
+        venda.setCliente(cliente);
+        venda.setFilial(filial);
+        venda.setAberta(false); // Já nasce fechada para o histórico
+        venda.setDataAbertura(LocalDateTime.now());
+        venda.setDataFechamento(LocalDateTime.now());
+        venda.setValorTotal(BigDecimal.ZERO);
+        venda.setItens(new ArrayList<>());
+
+        // Primeiro salvamos a comanda para gerar o ID dela
+        comandaRepository.save(venda);
+
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (var itemDto : dto.itens()) {
+            // CORREÇÃO: Usando findById porque passaste o ID "6" no Postman
+            var produto = produtoRepository.findById(Long.parseLong(itemDto.codigoProduto()))
+                    .orElseThrow(() -> new RuntimeException("Produto não encontrado ID: " + itemDto.codigoProduto()));
+
+            if (produto.getQuantidade() < itemDto.quantidade()) {
+                return ResponseEntity.badRequest().body("Estoque insuficiente para: " + produto.getDescricao());
+            }
+
+            // Baixa no estoque
+            produto.setQuantidade(produto.getQuantidade() - itemDto.quantidade());
+            produtoRepository.save(produto);
+
+            // Criar o item
+            ItemComanda item = new ItemComanda();
+            item.setComanda(venda);
+            item.setProduto(produto);
+            item.setQuantidade(itemDto.quantidade());
+            item.setPrecoUnitario(produto.getPrecoVenda());
+
+            itemComandaRepository.save(item); // Salva o item vinculado à venda
+
+            total = total.add(produto.getPrecoVenda().multiply(new BigDecimal(itemDto.quantidade())));
+        }
+
+        venda.setValorTotal(total);
+        comandaRepository.save(venda);
+
+        return ResponseEntity.ok("Venda rápida concluída! ID: " + venda.getId() + " Total: R$ " + total);
     }
 }

@@ -4,11 +4,14 @@ import com.example.demo.domain.Produto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ProdutoRepository extends JpaRepository<Produto, Long> {
-    java.util.Optional<Produto> findByCodigo(String codigo);
+    // ESTE É O CORRETO (Provavelmente o campo na sua classe Produto se chama 'codigo')
+    Optional<Produto> findByCodigo(String codigo);
 
-    // NOVO: Busca apenas os produtos de uma filial específica
     List<Produto> findByFilialId(Long filialId);
+
+    // REMOVA A LINHA: Optional<Produto> findByCode(String code); <- ELA CAUSA O ERRO
 }

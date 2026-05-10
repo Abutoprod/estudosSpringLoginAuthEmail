@@ -36,7 +36,18 @@ public class UsuarioController {
 
        service.registrar(usuario);
        return "Usuário registrado com sucesso! Verifique seu e-mail para confirmar a conta.";
-    } 
+    }
+
+    @GetMapping
+    public ResponseEntity<List<DadosDetalhamentoUsuario>> listarTodos() {
+
+        var lista = service.listarTodos().stream()
+                .map(DadosDetalhamentoUsuario::new)
+                .toList();
+        return ResponseEntity.ok(lista);
+    }
+
+
     @GetMapping("/confirmar")
     public ResponseEntity<String> confirmar(@RequestParam String token) {
         boolean confirmado = service.confirmarUsuario(token);

@@ -54,6 +54,7 @@ public class SecurityConfig {
 
                     // comandas
                     .requestMatchers(HttpMethod.POST, "/api/comandas/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/api/comandas/venda-rapida").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.PUT, "/api/comandas/**").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.GET, "/api/comandas/minha").authenticated() // Cliente vê a dele
                     .requestMatchers(HttpMethod.GET, "/api/comandas/**").hasRole("ADMIN") // Admin vê todas

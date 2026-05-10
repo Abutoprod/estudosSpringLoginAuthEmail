@@ -6,6 +6,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -34,6 +36,10 @@ public class UsuarioService {
             // 3. Por último, retorna o resultado
             return usuarioSalvo;
         }
+
+    public List<usuario> listarTodos() {
+        return reporsitory.findAll();
+    }
     private void enviarEmailConfirmacao(usuario usuario) {
         SimpleMailMessage mensagem = new SimpleMailMessage();
         mensagem.setTo(usuario.getEmail());

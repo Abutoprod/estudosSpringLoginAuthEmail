@@ -55,7 +55,7 @@ public class ProdutoController {
 
         var produto = produtoOptional.get();
         produto.setDescricao(dados.descricao());
-        produto.setPrecoVenda(dados.precoVenda());
+        produto.setPrecoCompra(dados.precoCompra());
         produto.setPrecoVenda(dados.precoVenda());
         produto.setQuantidade(dados.quantidade());
 
