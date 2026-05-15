@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import com.example.demo.domain.Filial;
 
 @Entity
 @Table(name = "lancamentos_pontos")
@@ -15,14 +16,18 @@ public class LancamentoPontos {
 
     @ManyToOne
     @JoinColumn(name = "usuario_id")
-    private usuario usuario; // Quem ganhou os pontos
+    private usuario usuario;
 
     @ManyToOne
     @JoinColumn(name = "jogo_id")
-    private Jogo jogo; // Qual jogo foi (Pokémon, Magic...)
+    private Jogo jogo;
+
+    // NOVO: Relacionamento com Filial
+    @ManyToOne
+    @JoinColumn(name = "filial_id")
+    private Filial filial;
 
     private Integer pontos;
     private LocalDateTime dataLancamento = LocalDateTime.now();
-    
-    private String observacao; // Ex: "Semanal 08/05 - 1º Lugar"
+    private String observacao;
 }

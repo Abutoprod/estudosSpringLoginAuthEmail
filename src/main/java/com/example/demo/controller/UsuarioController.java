@@ -11,6 +11,8 @@ import com.example.demo.domain.MovimentacaoCredito; // Resolve o erro [45,32]
 import org.springframework.security.core.annotation.AuthenticationPrincipal; // Resolve os erros [39,66] e [45,75]
 import java.math.BigDecimal; // Resolve o erro [53,69]
 import java.util.List;
+import java.util.Map;
+
 import com.example.demo.repository.MovimentacaoCreditoRepository; // Resolve o erro [26,6]
 import com.example.demo.repository.LancamentoPontosRepository; // Resolve o erro [27,13]
 import com.example.demo.dto.DesempenhoMensalDTO;
@@ -36,6 +38,27 @@ public class UsuarioController {
 
        service.registrar(usuario);
        return "Usuário registrado com sucesso! Verifique seu e-mail para confirmar a conta.";
+    }
+
+    @PostMapping("/esqueci-senha")
+    public ResponseEntity solicitarSenha(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        service.solicitarRedefinicaoSenha(email);
+        // Retornamos 200 sempre por segurança
+        return ResponseEntity.ok("Instruções enviadas para o e-mail, se cadastrado.");
+    }
+    @PostMapping("/redefinir-senha")
+    public ResponseEntity redefinirSenha(@RequestBody Map<String, String> payload) {
+        String token = payload.get("token");
+        String novaSenha = payload.get("novaSenha");
+
+        boolean sucesso = service.redefinirSenha(token, novaSenha);
+
+        if (sucesso) {
+            return ResponseEntity.ok("Senha alterada com sucesso!");
+        } else {
+            return ResponseEntity.badRequest().body("Código inválido ou expirado.");
+        }
     }
 
     @GetMapping

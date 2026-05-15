@@ -9,6 +9,6 @@ public interface usuarioRepository extends JpaRepository<usuario, Long> {
     // o Spring entende o nome do methodo e cria a query automaticamente, ou seja, ele vai procurar um usuario com o email que for passado como parametro
     // SELECT * FROM usuarios WHERE email = ?
     UserDetails findByEmail(String email);
-    
+    Optional<usuario> findOptionalByEmail(String email);
     Optional<usuario> findByTokenConfirmacao(String token);
 }

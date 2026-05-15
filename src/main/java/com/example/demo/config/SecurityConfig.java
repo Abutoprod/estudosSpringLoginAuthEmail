@@ -32,7 +32,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/usuarios/registrar").permitAll() // Libera o registro
                 .requestMatchers(HttpMethod.GET, "/api/usuarios/confirmar").permitAll()  // Libera a confirmação
                 .requestMatchers(HttpMethod.GET, "/api/participantes").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/jogos").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/api/usuarios/esqueci-senha").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/jogos").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/participantes").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/participantes/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/participantes/**").hasRole("ADMIN")
@@ -42,15 +43,18 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/eventos", "/api/eventos/**").permitAll()     
                 .requestMatchers(HttpMethod.GET, "/api/conteudo/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll() // LIBERE AS FOTOS
-                .requestMatchers(HttpMethod.POST, "/api/eventos/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/eventos").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/arquivos/upload").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/eventos/**").hasRole("ADMIN")
-
+                .requestMatchers(HttpMethod.DELETE, "/api/eventos").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/api/eventos/{eventoId}/pre-cadastro").authenticated()
+                    .requestMatchers(HttpMethod.DELETE, "/api/eventos/{eventoId}/cancelar-pre-cadastro").authenticated()
                     .requestMatchers(HttpMethod.POST, "/api/estoque").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.PUT, "/api/estoque/**").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.DELETE, "/api/estoque/**").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.GET, "/api/estoque").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/estoque/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/avisos").hasRole("ADMIN")
+
 
                     // comandas
                     .requestMatchers(HttpMethod.POST, "/api/comandas/**").hasRole("ADMIN")
@@ -66,7 +70,9 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/api/filiais/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/filiais").permitAll()
 
-                .anyRequest().authenticated()
+
+
+                .anyRequest().permitAll()
             )
             .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
             .build();

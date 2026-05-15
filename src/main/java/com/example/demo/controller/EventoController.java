@@ -51,7 +51,8 @@ public class EventoController {
 
     @GetMapping
     public ResponseEntity<List<EventoDTO>> listar() {
-        var eventos = repository.findByDataHoraAfterOrderByDataHoraAsc(LocalDateTime.now());
+        LocalDateTime limiteData = LocalDateTime.now().minusDays(2);
+        var eventos = repository.findByDataHoraAfterOrderByDataHoraAsc(limiteData);
 
         var dtos = eventos.stream().map(e -> new EventoDTO(
                 e.getId(),

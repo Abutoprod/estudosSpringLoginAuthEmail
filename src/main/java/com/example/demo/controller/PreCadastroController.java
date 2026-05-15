@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/eventos")
@@ -22,10 +23,10 @@ public class PreCadastroController {
     @Autowired
     private EventoRepository eventoRepository;
 
+    // --- MANTÉM TUA LÓGICA ORIGINAL COM AS VALIDAÇÕES ---
     @PostMapping("/{eventoId}/pre-cadastro")
     @Transactional
     public ResponseEntity<String> realizarPreCadastro(@PathVariable Long eventoId, Authentication authentication) {
-        // 1. Pega o usuário logado (Cast para a tua classe 'usuario')
         usuario usuarioLogado = (usuario) authentication.getPrincipal();
 
         var eventoOptional = eventoRepository.findById(eventoId);
@@ -35,18 +36,17 @@ public class PreCadastroController {
 
         var evento = eventoOptional.get();
 
-        // 2. Validação de data (CORRIGIDO: usando getDataHora() conforme definido em Evento.java
-        if (LocalDateTime.now().isAfter(evento.getDataHora())) { // CORRIGIDO PARA getDataHora()
+        // Validação 1: Data (Inscrições fecham quando o evento começa)
+        if (LocalDateTime.now().isAfter(evento.getDataHora())) {
             return ResponseEntity.badRequest().body("As inscrições para este evento já fecharam.");
         }
 
-        // 3. Validação de duplicidade
+        // Validação 2: Duplicidade
         boolean jaInscrito = preCadastroRepository.existsByEventoIdAndUsuarioId(eventoId, usuarioLogado.getId());
         if (jaInscrito) {
             return ResponseEntity.badRequest().body("Você já está pré-cadastrado neste evento.");
         }
 
-        // 4. Salva o pré-cadastro
         var preCadastro = new PreCadastro();
         preCadastro.setEvento(evento);
         preCadastro.setUsuario(usuarioLogado);
@@ -54,6 +54,41 @@ public class PreCadastroController {
 
         return ResponseEntity.ok("Pré-cadastro realizado com sucesso!");
     }
+
+    // --- NOVO: ENDPOINT PARA O BOTÃO "SAIR" ---
+    @DeleteMapping("/{eventoId}/cancelar-pre-cadastro")
+    @Transactional
+    public ResponseEntity<String> cancelarPreCadastro(@PathVariable Long eventoId, Authentication authentication) {
+        usuario usuarioLogado = (usuario) authentication.getPrincipal();
+
+        // Busca a inscrição específica
+        var preCadastro = preCadastroRepository.findByEventoIdAndUsuarioId(eventoId, usuarioLogado.getId());
+
+        if (preCadastro.isPresent()) {
+            preCadastroRepository.delete(preCadastro.get());
+            return ResponseEntity.ok("Inscrição removida.");
+        }
+
+        return ResponseEntity.badRequest().body("Você não está inscrito neste evento.");
+    }
+
+    // --- ATUALIZADO: LISTAR PARTICIPANTES COM ID (Para o Android comparar) ---
+    @GetMapping("/{eventoId}/participantes-pre-cadastrados_id")
+    public ResponseEntity<List<Map<String, Object>>> listarParticipantesDetalhados(@PathVariable Long eventoId) {
+        var lista = preCadastroRepository.findAllByEventoId(eventoId);
+
+        List<Map<String, Object>> participantes = lista.stream()
+                .map(pc -> {
+                    Map<String, Object> dados = new java.util.HashMap<>();
+                    dados.put("id", pc.getUsuario().getId());
+                    dados.put("nome", pc.getUsuario().getNome());
+                    return dados;
+                }).toList();
+
+        return ResponseEntity.ok(participantes);
+    }
+
+
 
     @GetMapping("/{eventoId}/participantes-pre-cadastrados")
     public ResponseEntity<List<String>> listarNomesPreCadastrados(@PathVariable Long eventoId) {

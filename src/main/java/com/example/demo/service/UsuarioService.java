@@ -50,6 +50,42 @@ public class UsuarioService {
         
         mailSender.send(mensagem);
     }
+    public void solicitarRedefinicaoSenha(String email) {
+        // Usamos o seu repository para buscar o usuário completo
+        Optional<usuario> optionalUsuario = reporsitory.findOptionalByEmail(email);
+
+        if (optionalUsuario.isPresent()) {
+            usuario usuario = optionalUsuario.get();
+            // Gera um código de 6 dígitos
+            String token = String.format("%06d", new java.util.Random().nextInt(999999));
+
+            usuario.setTokenConfirmacao(token);
+            reporsitory.save(usuario);
+
+            // Envia o e-mail de recuperação
+            SimpleMailMessage mensagem = new SimpleMailMessage();
+            mensagem.setTo(usuario.getEmail());
+            mensagem.setSubject("Recuperação de Senha");
+            mensagem.setText("Olá " + usuario.getNome() + ",\n\n" +
+                    "Seu código para redefinir a senha é: " + token + "\n\n" +
+                    "Caso não tenha solicitado, ignore este e-mail.");
+
+            mailSender.send(mensagem);
+        }
+    }
+    public boolean redefinirSenha(String token, String novaSenha) {
+        Optional<usuario> optionalUsuario = reporsitory.findByTokenConfirmacao(token);
+
+        if (optionalUsuario.isPresent()) {
+            usuario usuario = optionalUsuario.get();
+            // Aqui usamos o 'encoder' que você já tem no Service
+            usuario.setSenha(encoder.encode(novaSenha));
+            usuario.setTokenConfirmacao(null); // Limpa o token para segurança
+            reporsitory.save(usuario);
+            return true;
+        }
+        return false;
+    }
 
     public boolean confirmarUsuario(String token) {
         // Use o Optional do java.util

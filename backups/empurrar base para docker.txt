@@ -1,0 +1,1 @@
+cat backups/NOME_DO_ARQUIVO.sql | docker exec -i estudosspringloginauthemail-db-1 psql -U admin -d estoque_db

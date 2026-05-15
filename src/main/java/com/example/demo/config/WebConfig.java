@@ -12,5 +12,9 @@ public class WebConfig implements WebMvcConfigurer {
         // Quando o navegador/app pedir "/uploads/...", o Spring busca na pasta "fotos-eventos"
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:fotos-eventos/");
+
+        // NOVO MAPEAMENTO PÚBLICO PARA OS AVISOS:
+        registry.addResourceHandler("/images/avisos/**")
+                .addResourceLocations("file:/app/fotos-avisos/");
     }
-}
+    }

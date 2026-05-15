@@ -85,8 +85,10 @@ public class ComandaController {
                 c.isAberta(),
                 c.getDataAbertura(),
                 c.getItens().stream().map(item -> new ItemComandaDTO(
+                        item.getProduto().getId(),
                         item.getProduto().getDescricao(),
                         item.getQuantidade(),
+                        item.getProduto().getPrecoCompra(),
                         item.getPrecoUnitario()
                 )).toList()
         )).toList();
@@ -115,8 +117,10 @@ public class ComandaController {
                 c.isAberta(),
                 c.getDataAbertura(),
                 c.getItens().stream().map(item -> new com.example.demo.dto.ItemComandaDTO(
+                        item.getProduto().getId(),
                         item.getProduto().getDescricao(),
                         item.getQuantidade(),
+                        item.getProduto().getPrecoCompra(),
                         item.getPrecoUnitario()
                 )).toList()
         );
@@ -153,6 +157,7 @@ public class ComandaController {
         // 4. Cria o item da comanda
         ItemComanda item = new ItemComanda();
         item.setComanda(comanda);
+
         item.setProduto(produto);
         item.setQuantidade(quantidade);
         item.setPrecoUnitario(produto.getPrecoVenda());
@@ -215,8 +220,10 @@ public class ComandaController {
                 c.isAberta(),
                 c.getDataAbertura(),
                 c.getItens().stream().map(item -> new ItemComandaDTO(
+                        item.getProduto().getId(),
                         item.getProduto().getDescricao(),
                         item.getQuantidade(),
+                        item.getProduto().getPrecoCompra(),
                         item.getPrecoUnitario()
                 )).toList()
         )).toList();
