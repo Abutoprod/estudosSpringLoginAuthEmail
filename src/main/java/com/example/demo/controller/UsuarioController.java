@@ -50,7 +50,18 @@ public class UsuarioController {
 
         return ResponseEntity.ok("Administrador registrado com sucesso!");
     }
+    @PostMapping("/reenviar-confirmacao")
+    public ResponseEntity<String> reenviarConfirmacao(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        boolean enviado = service.reenviarEmailConfirmacao(email);
 
+        if (enviado) {
+            return ResponseEntity.ok("Novo e-mail de confirmação enviado com sucesso!");
+        } else {
+
+            return ResponseEntity.badRequest().body("E-mail não encontrado ou conta já ativada.");
+        }
+    }
     @PostMapping("/esqueci-senha")
     public ResponseEntity solicitarSenha(@RequestBody Map<String, String> payload) {
         String email = payload.get("email");

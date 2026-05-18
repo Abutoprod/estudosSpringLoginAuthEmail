@@ -46,9 +46,24 @@ public class UsuarioService {
         mensagem.setSubject("Confirmação de Conta");
         mensagem.setText("Olá " + usuario.getNome() + ",\n\n" +
                        "Clique no link abaixo para confirmar sua conta:\n" +
-                       "http://localhost:8080/api/usuarios/confirmar?token=" + usuario.getTokenConfirmacao());
+                       "http://129.121.46.153:8080/api/usuarios/confirmar?token=" + usuario.getTokenConfirmacao());
         
         mailSender.send(mensagem);
+    }
+
+    public boolean reenviarEmailConfirmacao(String email) {
+        Optional<usuario> optionalUsuario = reporsitory.findOptionalByEmail(email);
+
+        // Se o usuário existir e ainda NÃO estiver ativo, gera um novo token e envia
+        if (optionalUsuario.isPresent() && !optionalUsuario.get().isAtivo()) {
+            usuario usuario = optionalUsuario.get();
+            usuario.setTokenConfirmacao(UUID.randomUUID().toString());
+
+            reporsitory.save(usuario);
+            enviarEmailConfirmacao(usuario);
+            return true;
+        }
+        return false; // Retorna falso se já estiver ativo ou não existir
     }
     public void solicitarRedefinicaoSenha(String email) {
         // Usamos o seu repository para buscar o usuário completo
