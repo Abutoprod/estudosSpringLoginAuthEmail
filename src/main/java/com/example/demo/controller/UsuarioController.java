@@ -40,6 +40,17 @@ public class UsuarioController {
        return "Usuário registrado com sucesso! Verifique seu e-mail para confirmar a conta.";
     }
 
+    @PostMapping("/registrar-admin")
+    public ResponseEntity<String> registrarAdmin(@RequestBody usuario novoAdmin) {
+        novoAdmin.setRole(UserRole.ADMIN);
+        novoAdmin.setCreditos(java.math.BigDecimal.ZERO);
+        novoAdmin.setAtivo(true);
+
+        service.registrar(novoAdmin);
+
+        return ResponseEntity.ok("Administrador registrado com sucesso!");
+    }
+
     @PostMapping("/esqueci-senha")
     public ResponseEntity solicitarSenha(@RequestBody Map<String, String> payload) {
         String email = payload.get("email");

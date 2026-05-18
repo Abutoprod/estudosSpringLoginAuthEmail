@@ -46,6 +46,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/eventos").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/arquivos/upload").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/eventos").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/api/usuarios/registrar-admin").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.POST, "/api/eventos/{eventoId}/pre-cadastro").authenticated()
                     .requestMatchers(HttpMethod.DELETE, "/api/eventos/{eventoId}/cancelar-pre-cadastro").authenticated()
                     .requestMatchers(HttpMethod.POST, "/api/estoque").hasRole("ADMIN")
